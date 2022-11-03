@@ -1,0 +1,32 @@
+//set the language version
+syntax = "proto3";
+
+//this will translate into C# namespace
+package Services;
+
+//this will translate into server and client stub
+service Service {    
+    //this is will translate into a service operation
+    rpc CanSubtractLiquid(Empty) returns (CanSubtractLiquidOutput) {}
+    rpc SubtractLiquid(Liquid) returns (AddOutput) {}
+    rpc CanAddLiquid(Empty) returns (CanAddLiquidOutput) {}
+    rpc AddLiquid(Liquid) returns (AddOutput) {}
+}
+
+message Empty {}
+//message must be described outside the service definition
+message Liquid {
+    int32 amount = 1;  //the number (=1) indicates field ordering inside structure
+}
+
+message AddOutput {
+    int32 value = 1;
+}
+
+message CanSubtractLiquidOutput {
+    bool value = 1;
+}
+
+message CanAddLiquidOutput {
+    bool value = 1;
+}
