@@ -7,26 +7,51 @@ package Services;
 //this will translate into server and client stub
 service Service {    
     //this is will translate into a service operation
-    rpc CanSubtractLiquid(Empty) returns (CanSubtractLiquidOutput) {}
-    rpc SubtractLiquid(Liquid) returns (AddOutput) {}
-    rpc CanAddLiquid(Empty) returns (CanAddLiquidOutput) {}
-    rpc AddLiquid(Liquid) returns (AddOutput) {}
+    rpc TakeBook(Id) returns (BookResult) {}
+    rpc ReturnBook(BookInput) returns (Empty) {}
+    rpc RepairBook(IdAndWear) returns (Empty) {}
+    rpc GetLibraryCapacity(Empty) returns (GetLibraryCapacityOutput) {}
+    rpc GetWornOutBooks(Empty) returns (GetWornOutBooksOutput) {}
+    rpc GetLibraryBudget(Empty) returns (GetLibraryBudgetOutput) {}
 }
 
+message IdAndWear {
+    int32 Id = 1;
+    float Wear = 2;
+}
 message Empty {}
 //message must be described outside the service definition
-message Liquid {
-    int32 amount = 1;  //the number (=1) indicates field ordering inside structure
+message Id {
+    int32 Id = 1;
 }
 
-message AddOutput {
-    int32 value = 1;
+message BookInput {
+    int32 Id = 1;
+    float LoanDuration = 2;
+    bool Taken = 3;
+    string LoanTime = 4;
+    float Wear = 5;
+    float RepairPrice = 6;
 }
 
-message CanSubtractLiquidOutput {
-    bool value = 1;
+message BookResult {
+    int32 Id = 1;
+    float LoanDuration = 2;
+    bool Taken = 3;
+    string LoanTime = 4;
+    float Wear = 5;
+    float RepairPrice = 6;
 }
 
-message CanAddLiquidOutput {
-    bool value = 1;
+
+message GetLibraryCapacityOutput {
+    int32 Capacity = 1;
+}
+
+message GetWornOutBooksOutput {
+    repeated BookResult Books = 1;
+}
+
+message GetLibraryBudgetOutput {
+    float Budget = 1;
 }

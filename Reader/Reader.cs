@@ -7,6 +7,15 @@ using Grpc.Net.Client;
 using Services;
 
 
+public class Book
+{
+    public int Id { get; set; } // Id (Primary key)
+    public float LoanDuration { get; set; } // LoanDuration
+    public bool Taken { get; set; } = false; // Indicates if the book is taken or not
+    public DateTime LoanTime { get; set; } // Time when the book was taken
+    public float Wear { get; set; } = 0f; // Indicates how much the book is worn
+    public float RepairPrice { get; set; } = 1f; // Price of the book per 1 wear to repair
+}
 /// <summary>
 /// Client example.
 /// </summary>
@@ -48,36 +57,44 @@ class Client
         {
             try
             {
-                //connect to the server, get service proxy
+                //connect to the server, get client proxy
                 var channel = GrpcChannel.ForAddress("http://127.0.0.1:5000");
                 var client = new Service.ServiceClient(channel);
 
-                //use service
-                var random = new Random();
+                //use client
+                var rnd = new Random();
 
                 while (true)
                 {
-                    var canPump = client.CanSubtractLiquid(new Empty { }).Value;
+                    log.Info("");
+                    // takes a random book from the library
+                    int bookNumber = rnd.Next(0, client.GetLibraryCapacity(new Empty { }).Capacity);
+                    var result = client.TakeBook(new Id { Id_ = bookNumber });
+                    Book book = new Book();
+                    book.Id = bookNumber;
+                    book.LoanDuration = result.LoanDuration;
+                    book.LoanTime = DateTime.Parse(result.LoanTime);
+                    book.Taken = result.Taken;
+                    book.Wear = result.Wear;
+                    book.RepairPrice = result.RepairPrice;
 
-                    Thread.Sleep(2000);
+                    log.Info($"Book {book.Id} taken");
 
-                    var liquidToPump = random.Next(1, 20);
-
-                    if (canPump)
+                    // if the book is null, it means that it is already taken
+                    if (book == null)
                     {
-                        log.Info($"Generated amount to subtract: {liquidToPump}.");
-                        var pumpedLiquid = client.SubtractLiquid(new Liquid { Amount = liquidToPump }).Value;
-                        log.Info($"Amount of liquid subtracted: {pumpedLiquid}.");
-                        log.Info("\n");
+                        log.Info($"Book {bookNumber} is not available");
+                        Thread.Sleep(2000);
+                        continue;
                     }
-                    else
-                    {
-                        log.Info("I cannot subtract any more liquid.");
-                        log.Info("\n");
-                    }
-                    log.Info("---");
 
-                    Thread.Sleep(2000);
+                    // decides a random time to take reading the book
+                    int timeToRead = rnd.Next(5000, 10000);
+                    log.Info($"Reading book {bookNumber} for {timeToRead} ms");
+                    Thread.Sleep(timeToRead);
+
+                    // Returns the book
+                    client.ReturnBook(new BookInput { Id = book.Id, LoanDuration = book.LoanDuration, LoanTime = book.LoanTime.ToString(), Taken = book.Taken, Wear = book.Wear, RepairPrice = book.RepairPrice });
                 }
             }
             catch (Exception e)
