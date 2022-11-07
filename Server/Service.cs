@@ -27,47 +27,93 @@ public class Service : Services.Service.ServiceBase
     /// </summary>
     private ServiceLogic logic = new ServiceLogic();
 
-    public override Task<CanSubtractLiquidOutput> CanSubtractLiquid(Empty empty, ServerCallContext context)
+    public override Task<BookResult> TakeBook(Id request, ServerCallContext context)
     {
-        log.Info($"Service instance hash code: {this.GetHashCode()}.");
-
         lock (accessLock)
         {
-            var result = new CanSubtractLiquidOutput { Value = logic.CanSubtractLiquid() };
-            return Task.FromResult(result);
+            var book = logic.TakeBook(request.Id_);
+            if (book == null)
+            {
+                return Task.FromResult(new BookResult { });
+            }
+            else
+            {
+                return Task.FromResult(new BookResult
+                {
+                    Id = book.Id,
+                    LoanDuration = book.LoanDuration,
+                    Taken = book.Taken,
+                    LoanTime = book.LoanTime.ToString(),
+                    Wear = book.Wear,
+                    RepairPrice = book.RepairPrice,
+                });
+            }
         }
     }
 
-    public override Task<CanAddLiquidOutput> CanAddLiquid(Empty empty, ServerCallContext context)
+    public override Task<Empty> ReturnBook(BookInput request, ServerCallContext context)
     {
-        log.Info($"Service instance hash code: {this.GetHashCode()}.");
-
         lock (accessLock)
         {
-            var result = new CanAddLiquidOutput { Value = logic.CanAddLiquid() };
-            return Task.FromResult(result);
+            logic.ReturnBook(new Book
+            {
+                Id = request.Id,
+                LoanDuration = request.LoanDuration,
+                Taken = request.Taken,
+                LoanTime = DateTime.Parse(request.LoanTime),
+                Wear = request.Wear,
+                RepairPrice = request.RepairPrice,
+            });
+            return Task.FromResult(new Empty { });
         }
     }
 
-    public override Task<AddOutput> SubtractLiquid(Liquid input, ServerCallContext context)
+    public override Task<Empty> RepairBook(IdAndWear request, ServerCallContext context)
     {
-        log.Info($"Service instance hash code: {this.GetHashCode()}.");
-
         lock (accessLock)
         {
-            var result = new AddOutput { Value = logic.SubtractLiquid(input.Amount) };
-            return Task.FromResult(result);
+            logic.RepairBook(request.Id, request.Wear);
+            return Task.FromResult(new Empty { });
         }
     }
 
-    public override Task<AddOutput> AddLiquid(Liquid input, ServerCallContext context)
+    public override Task<GetLibraryCapacityOutput> GetLibraryCapacity(Empty request, ServerCallContext context)
     {
-        log.Info($"Service instance hash code: {this.GetHashCode()}.");
-
         lock (accessLock)
         {
-            var result = new AddOutput { Value = logic.AddLiquid(input.Amount) };
-            return Task.FromResult(result);
+            var capacity = logic.GetLibraryCapacity();
+            return Task.FromResult(new GetLibraryCapacityOutput { Capacity = capacity });
+        }
+    }
+
+    public override Task<GetWornOutBooksOutput> GetWornOutBooks(Empty request, ServerCallContext context)
+    {
+        lock (accessLock)
+        {
+            var books = logic.GetWornOutBooks();
+            var output = new GetWornOutBooksOutput();
+            foreach (var book in books)
+            {
+                output.Books.Add(new BookResult
+                {
+                    Id = book.Id,
+                    LoanDuration = book.LoanDuration,
+                    Taken = book.Taken,
+                    LoanTime = book.LoanTime.ToString(),
+                    Wear = book.Wear,
+                    RepairPrice = book.RepairPrice,
+                });
+            }
+            return Task.FromResult(output);
+        }
+    }
+
+    public override Task<GetLibraryBudgetOutput> GetLibraryBudget(Empty request, ServerCallContext context)
+    {
+        lock (accessLock)
+        {
+            var budget = logic.GetLibraryBudget();
+            return Task.FromResult(new GetLibraryBudgetOutput { Budget = budget });
         }
     }
 }

@@ -8,12 +8,20 @@ using NLog;
 /// <summary>
 /// Application entry point.
 /// </summary>
+public class Book
+{
+    public int Id { get; set; } // Id (Primary key)
+    public float LoanDuration { get; set; } // LoanDuration
+    public bool Taken { get; set; } = false; // Indicates if the book is taken or not
+    public DateTime LoanTime { get; set; } // Time when the book was taken
+    public float Wear { get; set; } = 0f; // Indicates how much the book is worn
+    public float RepairPrice { get; set; } = 1f; // Price of the book per 1 wear to repair
+}
 public class Server
 {
-    public static int capacity = new Random().Next(0, 100);
-    public static int lowerBound = 0;
-    public static int upperBound = 0;
-    public static bool clientIsActive = false;
+    public static float money = 0;
+    public static int capacity = 5;
+    public static Book[] books = new Book[capacity];
 
     /// <summary>
     /// Logger for this class.
@@ -57,6 +65,14 @@ public class Server
         //configure logging
         ConfigureLogging();
 
+        // populate the library
+        for (int i = 0; i < capacity; i++)
+        {
+            books[i] = new Book();
+            books[i].Id = i;
+            books[i].RepairPrice = (float)(50 + 10.0 * new Random().NextDouble());
+        }
+
         //indicate server is about to start
         log.Info("Server is about to start");
 
@@ -65,15 +81,6 @@ public class Server
 
         while (true)
         {
-            if (clientIsActive)
-            {
-                log.Info("Client is working...");
-                Thread.Sleep(2000);
-                Server.clientIsActive = false;
-            }
-            lowerBound = new Random().Next(0, 50);
-            upperBound = new Random().Next(lowerBound + 1, 100);
-            log.Info("Bounds changed to: " + lowerBound + " " + upperBound + " and current capacity is: " + capacity);
             Thread.Sleep(4000);
         }
     }
